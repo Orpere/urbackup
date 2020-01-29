@@ -14,7 +14,7 @@ resource "aws_s3_bucket" "urbackup" {
 
 resource "aws_instance" "urbackup_server" {
   instance_type        = "t2.micro"
-  availability_zone    = "eu-central-1a"
+  availability_zone    = var.azone
   ami                  = "ami-0cc0a36f626a4fdf5"
   iam_instance_profile = "urbackup"
   security_groups      = ["urbackup"]
