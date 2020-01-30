@@ -11,7 +11,10 @@ resource "aws_s3_bucket" "urbackup" {
     Environment = "Production"
   }
 }
-
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.urbackup_server.id
+  allocation_id = aws_eip.urbackup.id
+}
 resource "aws_instance" "urbackup_server" {
   instance_type        = "t2.micro"
   availability_zone    = var.azone
@@ -19,6 +22,10 @@ resource "aws_instance" "urbackup_server" {
   iam_instance_profile = "urbackup"
   security_groups      = ["urbackup"]
   key_name             = "orlando"
+}
+
+resource "aws_eip" "urbackup" {
+  vpc = true
 }
 
 resource "aws_security_group" "urbackup" {
@@ -49,5 +56,17 @@ resource "aws_security_group" "urbackup" {
     from_port = 35623
     to_port   = 35623
   }
-
+  ingress {
+    self        = true
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }

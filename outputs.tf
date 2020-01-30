@@ -14,3 +14,8 @@ output "role_policy" {
 output "role_profile" {
   value = aws_iam_instance_profile.urbackup.name
 }
+
+
+output "urbackup_server_ips" {
+  value = [aws_eip.urbackup.public_ip]
+}
