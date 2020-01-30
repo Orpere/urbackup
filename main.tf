@@ -22,6 +22,21 @@ resource "aws_instance" "urbackup_server" {
   iam_instance_profile = "urbackup"
   security_groups      = ["urbackup"]
   key_name             = "orlando"
+  tags = {
+    Name        = "urbackup-server"
+    Environment = "production"
+  }
+  provisioner "file" {
+    source      = "script.sh"
+    destination = "/tmp/script.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/script.sh",
+      "/tmp/script.sh args",
+    ]
+  }
 }
 
 resource "aws_eip" "urbackup" {
@@ -50,17 +65,18 @@ resource "aws_security_group" "urbackup" {
     from_port = 55414
     to_port   = 55414
   }
-  egress {
-    protocol  = "udp"
-    self      = true
-    from_port = 35623
-    to_port   = 35623
-  }
+  
   ingress {
     self        = true
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    protocol  = "-1"
+    self      = true
+    from_port = 0
+    to_port   = 0
   }
 }
