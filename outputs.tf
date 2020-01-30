@@ -15,7 +15,10 @@ output "role_profile" {
   value = aws_iam_instance_profile.urbackup.name
 }
 
-
 output "urbackup_server_ips" {
-  value = [aws_eip.urbackup.public_ip]
+  value = [aws_instance.urbackup_server.public_ip]
+}
+
+output "urbackup_server_dns" {
+  value = [aws_instance.urbackup_server.public_dns]
 }

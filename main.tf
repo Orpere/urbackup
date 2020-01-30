@@ -11,10 +11,7 @@ resource "aws_s3_bucket" "urbackup" {
     Environment = "Production"
   }
 }
-resource "aws_eip_association" "eip_assoc" {
-  instance_id   = aws_instance.urbackup_server.id
-  allocation_id = aws_eip.urbackup.id
-}
+
 resource "aws_instance" "urbackup_server" {
   instance_type        = "t2.micro"
   availability_zone    = var.azone
@@ -26,21 +23,18 @@ resource "aws_instance" "urbackup_server" {
     Name        = "urbackup-server"
     Environment = "production"
   }
-  provisioner "file" {
-    source      = "script.sh"
-    destination = "/tmp/script.sh"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/script.sh",
-      "/tmp/script.sh args",
-    ]
-  }
 }
 
-resource "aws_eip" "urbackup" {
-  vpc = true
+resource "aws_instance" "urbackup_client" {
+  instance_type     = "t2.micro"
+  availability_zone = var.azone
+  ami               = "ami-0cc0a36f626a4fdf5"
+  security_groups   = ["urbackup"]
+  key_name          = "orlando"
+  tags = {
+    Name        = "urbackup-client"
+    Environment = "production"
+  }
 }
 
 resource "aws_security_group" "urbackup" {
@@ -48,24 +42,27 @@ resource "aws_security_group" "urbackup" {
   description = "Allow urbackup traffic"
 
   ingress {
-    self      = true
-    from_port = 55415
-    to_port   = 55415
-    protocol  = "tcp"
+    self        = true
+    from_port   = 55415
+    to_port     = 55415
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    protocol  = "tcp"
-    self      = true
-    from_port = 55413
-    to_port   = 55413
+    protocol    = "udp"
+    self        = true
+    from_port   = 55413
+    to_port     = 55413
+    cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    protocol  = "tcp"
-    self      = true
-    from_port = 55414
-    to_port   = 55414
+    protocol    = "tcp"
+    self        = true
+    from_port   = 55414
+    to_port     = 55414
+    cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   ingress {
     self        = true
     from_port   = 22
@@ -73,10 +70,18 @@ resource "aws_security_group" "urbackup" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    self        = true
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   egress {
-    protocol  = "-1"
-    self      = true
-    from_port = 0
-    to_port   = 0
+    protocol    = "-1"
+    self        = true
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
